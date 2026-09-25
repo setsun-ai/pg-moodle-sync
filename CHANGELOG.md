@@ -5,7 +5,7 @@
 - **Safety fuse:** if a settings change would move a large part of the already downloaded archive, nothing is moved or downloaded until you confirm with `download --reorganize`. The error notification explains why. Found in real use: `LANGUAGE` was lost in a glued `.env` line, and every folder started to be renamed to English.
 - `doctor` shows the effective language and folder names, and detects broken `.env` lines (glued or without `=`).
 - New `set KEY VALUE` command to change `.env` safely. `.env` is always written with LF line endings.
-- Cloud moves save their progress every 20 files, so an interrupted run doesn't start over.
+- **Cloud moves are "netted" first.** One listing of the cloud folder, then only the moves that are really needed: already-done moves and round trips (A→B→A) cost nothing, and chains collapse. They run 3 in parallel and save progress every 20 files. Before this, an interrupted re-organisation meant hundreds of useless ~8 s rclone calls on a Raspberry Pi, and "source doesn't exist" was wrongly retried as an error.
 
 ## 1.0.0 (2026-09)
 

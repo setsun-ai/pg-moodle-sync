@@ -117,6 +117,42 @@ def test_mass_move_is_blocked_until_confirmed(monkeypatch):
     assert len(state.load()["remote_moves"]) == 30
 
 
+class TestNetMoves:
+    """Regression: an interrupted PL->EN re-organisation followed by EN->PL."""
+
+    def net(self, queue, existing):
+        from moodle_sync.storage import net_moves
+        return net_moves([{"from": a, "to": b} for a, b in queue], set(existing))
+
+    def test_already_done_move_is_dropped(self):
+        assert self.net([("pl/a", "en/a"), ("en/a", "pl/a")], {"pl/a"}) == []       # never executed -> round trip
+
+    def test_executed_move_is_reverted_once(self):
+        assert self.net([("pl/a", "en/a"), ("en/a", "pl/a")], {"en/a"}) == [{"from": "en/a", "to": "pl/a"}]
+
+    def test_chain_collapses(self):
+        assert self.net([("a", "b"), ("b", "c")], {"a"}) == [{"from": "a", "to": "c"}]
+
+    def test_missing_source_costs_nothing(self):
+        assert self.net([("gone", "x")], {"other"}) == []
+
+
+def test_apply_remote_moves_only_runs_net_moves(monkeypatch):
+    from moodle_sync import storage
+
+    state.save({"remote_moves": [{"from": "pl/a", "to": "en/a"}, {"from": "pl/b", "to": "en/b"},
+                                 {"from": "en/a", "to": "pl/a"}, {"from": "en/b", "to": "pl/b"},
+                                 {"from": "pl/c", "to": "en/c"}]})
+    monkeypatch.setattr(storage, "remote_files", lambda: {"en/a", "pl/b", "pl/c"})  # a moved, b/c not yet
+    calls = []
+    monkeypatch.setattr(storage, "_move_one", lambda m: calls.append((m["from"], m["to"])) or m["from"] != "pl/c")
+    monkeypatch.setattr(storage, "rclone", lambda *a, **k: 0)
+
+    assert storage.apply_remote_moves(dry_run=False) == 1           # pl/c failed once
+    assert sorted(calls) == [("en/a", "pl/a"), ("pl/c", "en/c")]    # b's round trip needs no call
+    assert state.load()["remote_moves"] == [{"from": "pl/c", "to": "en/c", "attempts": 1}]
+
+
 def test_too_large_is_retried_after_raising_the_limit(monkeypatch):
     f = make_file(filesize=50 * 1024 * 1024)
     downloaded = {f["id"]: {"skipped": "too_large"}}

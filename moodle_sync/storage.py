@@ -76,37 +76,84 @@ def target(path: str = "") -> str:
     return f"{base}/{path}" if path else base
 
 
+def remote_files() -> set[str] | None:
+    """All file paths under the target folder (one rclone call), or None if listing failed."""
+    out = subprocess.run(
+        [config.rclone_bin(), "lsf", "-R", "--files-only", "--fast-list", target()],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+    )
+    if out.returncode in RCLONE_NOT_FOUND:
+        return set()
+    if out.returncode != 0:
+        return None
+    return {line for line in out.stdout.splitlines() if line}
+
+
+def net_moves(queue: list[dict], existing: set[str]) -> list[dict]:
+    """
+    Replay the queued moves on the list of files that REALLY exist in the cloud
+    and return only what's left to do: [{"from": where it is now, "to": final place}].
+    - a move whose source isn't there (already done, or never uploaded) disappears,
+    - chains collapse (A->B, B->C = A->C), round trips vanish (A->B, B->A = nothing).
+    This matters after an interrupted re-organisation: hundreds of queued moves
+    may come down to a handful - each rclone call costs seconds on a Raspberry Pi.
+    """
+    origin_of = {path: path for path in existing}  # current location -> where it is now in the cloud
+    for move in queue:
+        if move["from"] in origin_of:
+            origin_of[move["to"]] = origin_of.pop(move["from"])
+    return [{"from": origin, "to": final} for final, origin in origin_of.items() if origin != final]
+
+
+def _move_one(move: dict) -> bool:
+    return rclone("moveto", target(move["from"]), target(move["to"])) == 0
+
+
 def apply_remote_moves(dry_run: bool) -> int:
     """Files moved locally by re-categorisation -> `rclone moveto` (no re-upload)."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     state = state_mod.load()
-    moves = state.get("remote_moves", [])
-    if not moves:
+    queue = state.get("remote_moves", [])
+    if not queue:
         return 0
-    print(t("storage_moving", n=len(moves)))
-    failed, remaining = 0, []
-    for i, move in enumerate(moves):
-        if dry_run:
+
+    existing = remote_files()
+    if existing is None:
+        print(t("storage_list_failed"))
+        return 1  # keep the queue, try again next run
+    moves = net_moves(queue, existing)
+    print(t("storage_moving", n=len(moves), queued=len(queue)))
+    if dry_run:
+        for move in moves:
             print(f"    {move['from']} -> {move['to']}")
-            continue
-        if i and i % 20 == 0:
-            # Save progress now and then: hundreds of moves take a while on a
-            # Raspberry Pi, and an interrupted run shouldn't redo the done ones.
-            state["remote_moves"] = remaining + moves[i:]
-            state_mod.save(state)
-        code = rclone("moveto", target(move["from"]), target(move["to"]))
-        if code == 0 or code in RCLONE_NOT_FOUND:
-            continue  # not in the cloud (yet) - copy will upload it to the new path
-        move["attempts"] = move.get("attempts", 0) + 1
-        if move["attempts"] >= MAX_MOVE_ATTEMPTS:
-            # Worst case of giving up: the old copy stays in the cloud next to the new one.
-            print("    " + t("storage_move_gave_up", n=MAX_MOVE_ATTEMPTS, path=move["from"]))
-            continue
-        failed += 1
-        remaining.append(move)  # e.g. no network - retry next time
-    if not dry_run:
-        state["remote_moves"] = remaining
-        state_mod.save(state)
-        rclone("rmdirs", target(), "--leave-root")  # empty folders left after moves
+        return 0
+
+    attempts = {m["from"]: m.get("attempts", 0) for m in queue}
+    failed, pending, done = 0, list(moves), 0
+    # A few moves in parallel: each is a separate rclone process that spends
+    # most of its time waiting for Google, not using the CPU.
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {pool.submit(_move_one, m): m for m in moves}
+        for future in as_completed(futures):
+            move = futures[future]
+            pending.remove(move)
+            if not future.result():
+                tries = attempts.get(move["from"], 0) + 1
+                if tries >= MAX_MOVE_ATTEMPTS:
+                    # Worst case of giving up: the old copy stays next to the new one.
+                    print("    " + t("storage_move_gave_up", n=MAX_MOVE_ATTEMPTS, path=move["from"]))
+                else:
+                    failed += 1
+                    pending.append({**move, "attempts": tries})  # e.g. no network - retry next time
+            done += 1
+            if done % 20 == 0:  # save progress: an interrupted run won't redo finished moves
+                state["remote_moves"] = list(pending)
+                state_mod.save(state)
+
+    state["remote_moves"] = list(pending)
+    state_mod.save(state)
+    rclone("rmdirs", target(), "--leave-root")  # empty folders left after moves
     return failed
 
 
