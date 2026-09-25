@@ -42,6 +42,14 @@ MESSAGES: dict[str, dict[str, str]] = {
     "files_summary": {"pl": "Pobrano: {ok}, błędy: {failed}", "en": "Downloaded: {ok}, errors: {failed}"},
     "files_baseline": {"pl": "Oznaczono {n} plików jako pobrane (bez pobierania).",
                        "en": "Marked {n} files as done (without downloading)."},
+    "files_mass_move": {"pl": "UWAGA: obecne ustawienia przeniosłyby {n} już pobranych plików do innych folderów\n"
+                              "(np. po zmianie LANGUAGE, nazw kursów albo reguł kategorii). Dla bezpieczeństwa niczego nie\n"
+                              "przenoszę ani nie pobieram. Sprawdź ustawienia: python -m moodle_sync doctor\n"
+                              "Jeśli ta zmiana jest zamierzona, zatwierdź ją raz: python -m moodle_sync download --reorganize",
+                        "en": "WARNING: the current settings would move {n} already downloaded files to other folders\n"
+                              "(e.g. after changing LANGUAGE, course names or category rules). To be safe, nothing is moved\n"
+                              "or downloaded. Check the settings: python -m moodle_sync doctor\n"
+                              "If the change is intended, confirm it once: python -m moodle_sync download --reorganize"},
     "notify_files_title": {"pl": "Nowe materiały ({n})", "en": "New course materials ({n})"},
     "courses_header": {"pl": "Kursy: {n}. Nazwy i kategorie możesz zmienić w {file} (patrz courses.example.json).",
                        "en": "Courses: {n}. You can change names and categories in {file} (see courses.example.json)."},
@@ -110,6 +118,10 @@ MESSAGES: dict[str, dict[str, str]] = {
                                 "(and check the Google Cloud app is 'In production')."},
     "hint_rclone_token": {"pl": "rclone nie może odświeżyć logowania do chmury: rclone config reconnect <remote>:",
                           "en": "rclone can't refresh the cloud login: rclone config reconnect <remote>:"},
+    "hint_mass_move": {"pl": "Nic nie zostało przeniesione. Najczęstsza przyczyna: literówka albo sklejona linia w .env "
+                             "- sprawdź: python -m moodle_sync doctor",
+                       "en": "Nothing was moved. The most common cause: a typo or a glued line in .env "
+                             "- check: python -m moodle_sync doctor"},
     "hint_network": {"pl": "Brak sieci / DNS - sprawdź połączenie z internetem.",
                      "en": "No network / DNS - check the internet connection."},
     "weekly_title": {"pl": "Działam — podsumowanie tygodnia", "en": "Still running — weekly summary"},
@@ -165,6 +177,17 @@ MESSAGES: dict[str, dict[str, str]] = {
     "doc_header": {"pl": "Sprawdzam konfigurację…", "en": "Checking the configuration…"},
     "doc_no_env": {"pl": "Brak pliku .env - uruchom: python -m moodle_sync setup",
                    "en": "No .env file - run: python -m moodle_sync setup"},
+    "doc_env_bad_line": {"pl": ".env, linia {n}: brak '=' i brak '#' - linia jest pomijana (dodaj '#' na początku)",
+                         "en": ".env, line {n}: no '=' and no '#' - the line is ignored (add '#' in front)"},
+    "doc_env_glued": {"pl": ".env, linia {n}: wartość {key} zawiera kolejne ustawienie - dwie linie sklejone w jedną "
+                            "(brak nowej linii). Popraw: python -m moodle_sync set <KLUCZ> <WARTOŚĆ>",
+                      "en": ".env, line {n}: the value of {key} contains another setting - two lines glued into one "
+                            "(missing newline). Fix: python -m moodle_sync set <KEY> <VALUE>"},
+    "doc_settings": {"pl": "Język: {lang}, nazwa: {label}, foldery: {folders}",
+                     "en": "Language: {lang}, label: {label}, folders: {folders}"},
+    "set_bad_key": {"pl": "Nieprawidłowa nazwa ustawienia: {key} (dozwolone: WIELKIE_LITERY_I_CYFRY)",
+                    "en": "Invalid setting name: {key} (allowed: UPPER_CASE_AND_DIGITS)"},
+    "set_done": {"pl": "Zapisano w .env: {key}={value}", "en": "Saved to .env: {key}={value}"},
     "doc_no_url": {"pl": "Brak MOODLE_BASE_URL w .env - uruchom: python -m moodle_sync setup",
                    "en": "No MOODLE_BASE_URL in .env - run: python -m moodle_sync setup"},
     "doc_site_ok": {"pl": "Moodle: {name} ({url})", "en": "Moodle: {name} ({url})"},
@@ -353,11 +376,11 @@ MESSAGES: dict[str, dict[str, str]] = {
 }
 
 
-def t(key: str, **kwargs) -> str:
-    """Message `key` in the configured language, formatted with kwargs."""
-    entry = MESSAGES.get(key)
+def t(message_key: str, /, **kwargs) -> str:
+    """Message in the configured language, formatted with kwargs (which may include `key`)."""
+    entry = MESSAGES.get(message_key)
     if entry is None:
-        return key
+        return message_key
     text = entry.get(config.language()) or entry["en"]
     return text.format(**kwargs) if kwargs else text
 

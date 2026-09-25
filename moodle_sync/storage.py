@@ -84,10 +84,15 @@ def apply_remote_moves(dry_run: bool) -> int:
         return 0
     print(t("storage_moving", n=len(moves)))
     failed, remaining = 0, []
-    for move in moves:
+    for i, move in enumerate(moves):
         if dry_run:
             print(f"    {move['from']} -> {move['to']}")
             continue
+        if i and i % 20 == 0:
+            # Save progress now and then: hundreds of moves take a while on a
+            # Raspberry Pi, and an interrupted run shouldn't redo the done ones.
+            state["remote_moves"] = remaining + moves[i:]
+            state_mod.save(state)
         code = rclone("moveto", target(move["from"]), target(move["to"]))
         if code == 0 or code in RCLONE_NOT_FOUND:
             continue  # not in the cloud (yet) - copy will upload it to the new path

@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 
+import pytest
 from conftest import make_file
 
 from moodle_sync import config, files, state
@@ -81,7 +82,8 @@ def test_relocate_moves_file_and_queues_cloud_move(isolated):
     st = {"downloaded": downloaded}
 
     plan = files.plan_paths([f], downloaded, {})
-    assert files.relocate([f], plan, downloaded, st, dry_run=False) == 1
+    moves = files.planned_moves([f], plan, downloaded)
+    assert files.relocate(moves, downloaded, st, dry_run=False) == 1
 
     new = root / "Algorithms" / "Lectures" / "a.pdf"
     assert new.read_text() == "x" and not old.exists()
@@ -90,6 +92,29 @@ def test_relocate_moves_file_and_queues_cloud_move(isolated):
     saved = json.loads(config.STATE_FILE.read_text(encoding="utf-8"))
     assert saved["remote_moves"] == [{"from": "Algorithms/Other materials/a.pdf", "to": "Algorithms/Lectures/a.pdf"}]
     assert state.load()["downloaded"][f["id"]]["path"] == "Algorithms/Lectures/a.pdf"
+
+
+def test_mass_move_is_blocked_until_confirmed(monkeypatch):
+    """Regression: LANGUAGE lost in a broken .env must not rename the whole archive."""
+    from moodle_sync import moodle
+
+    course_files = [make_file(id=f"url:{i}", module_id=i, filename=f"w{i}.pdf", section_name="Wykłady")
+                    for i in range(30)]
+    monkeypatch.setattr(moodle, "my_courses", lambda: [])
+    monkeypatch.setattr(files, "collect_files", lambda courses: course_files)
+    monkeypatch.setattr(files, "download_file", lambda f, dest: pytest.fail("must not download"))
+    monkeypatch.setenv("LANGUAGE", "pl")
+    state.save({"downloaded": {f["id"]: {"path": files.relative_path(f, {}).as_posix(), "key": files.logical_key(f)}
+                               for f in course_files}})
+
+    monkeypatch.setenv("LANGUAGE", "en")  # the accident: every folder would become English
+    assert files.run() == 1
+    assert "Wyklady" in state.load()["downloaded"]["url:0"]["path"]  # nothing moved
+    assert "remote_moves" not in state.load()
+
+    assert files.run(reorganize=True) == 0  # explicitly confirmed
+    assert "Lectures" in state.load()["downloaded"]["url:0"]["path"]
+    assert len(state.load()["remote_moves"]) == 30
 
 
 def test_too_large_is_retried_after_raising_the_limit(monkeypatch):

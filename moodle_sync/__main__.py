@@ -13,12 +13,36 @@ Command line: python -m moodle_sync <command>
     ics         print the calendar subscription URL (Outlook / Apple Calendar)
     bot         run the Telegram bot            [--setup]
     notify-test send a test notification to all configured channels
+    set         change one setting in .env safely, e.g.: set LANGUAGE pl
 """
 
 import argparse
 import sys
 
 from . import __version__
+
+SECRET_WORDS = ("TOKEN", "PASSWORD", "SECRET", "WEBHOOK", "HEALTHCHECK")
+
+
+def set_setting(key: str, value: str) -> int:
+    """
+    Change one .env setting in place. Safer than appending with `echo >>`:
+    that glues the new line onto the last one when the file doesn't end
+    with a newline (a real accident - see docs: troubleshooting).
+    """
+    import re
+
+    from . import config
+    from .i18n import t
+
+    key = key.strip().upper()
+    if not re.fullmatch(r"[A-Z][A-Z0-9_]*", key):
+        print(t("set_bad_key", key=key))
+        return 2
+    config.set_env_var(key, value.strip())
+    shown = "***" if any(word in key for word in SECRET_WORDS) else value.strip()
+    print(t("set_done", key=key, value=shown))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -41,6 +65,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--limit", type=int, default=0)
     p.add_argument("--baseline", action="store_true", help="mark current files as done without downloading")
+    p.add_argument("--reorganize", action="store_true",
+                   help="confirm moving many already downloaded files after a settings change")
     p = sub.add_parser("upload", help="only upload to the cloud")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--check", action="store_true", help="only test the rclone remote")
@@ -55,6 +81,9 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("bot", help="run the Telegram bot")
     p.add_argument("--setup", action="store_true", help="connect the bot to your chat")
     sub.add_parser("notify-test", help="send a test notification")
+    p = sub.add_parser("set", help="change one setting in .env safely, e.g.: set LANGUAGE pl")
+    p.add_argument("key")
+    p.add_argument("value")
 
     args = parser.parse_args(argv)
     cmd = args.command
@@ -77,7 +106,9 @@ def main(argv: list[str] | None = None) -> int:
         return run(log_file=args.log_file)
     if cmd == "download":
         from .files import run
-        return run(dry_run=args.dry_run, limit=args.limit, baseline=args.baseline)
+        return run(dry_run=args.dry_run, limit=args.limit, baseline=args.baseline, reorganize=args.reorganize)
+    if cmd == "set":
+        return set_setting(args.key, args.value)
     if cmd == "upload":
         from . import storage
         return storage.check() if args.check else storage.run(dry_run=args.dry_run)

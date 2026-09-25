@@ -108,6 +108,8 @@ Z Telegramem SSH jest rzadko potrzebne: `/status` pokazuje ostatni przebieg, wol
 | Wolne miejsce | `df -h /` |
 | Zmiana częstotliwości | zmień `OnUnitInactiveSec=` w `deploy/linux/moodle-sync.timer`, potem ponownie `install-server.sh` |
 
+**Zmiana ustawienia:** `.venv/bin/python -m moodle_sync set LANGUAGE pl`, potem `sudo systemctl restart moodle-sync-bot`. Nie dopisuj do `.env` przez `echo >>`: jeśli plik nie kończy się znakiem nowej linii, nowa linia sklei się z ostatnią.
+
 **Aktualizacja moodle-sync:**
 
 ```bash

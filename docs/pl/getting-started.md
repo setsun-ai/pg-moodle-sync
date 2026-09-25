@@ -87,3 +87,4 @@ Każda linia to jedno sprawdzenie:
 | `ics` | Adres subskrypcji kalendarza (Outlook / Apple). |
 | `bot [--setup]` | Bot Telegram / połączenie bota z Twoim czatem. |
 | `notify-test` | Testowe powiadomienie na wszystkie kanały. |
+| `set KLUCZ WARTOŚĆ` | Bezpieczna zmiana jednego ustawienia w `.env`, np. `set LANGUAGE pl`. Używaj zamiast `echo ... >> .env`. |

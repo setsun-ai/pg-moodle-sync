@@ -8,6 +8,7 @@ import shutil
 import sys
 
 from . import calendar_sync, config, moodle, notify, storage
+from .files import FOLDER_NAMES
 from .i18n import t
 
 # Functions the tool needs from the token; missing ones disable a feature.
@@ -42,6 +43,16 @@ def run() -> int:
     if not config.ENV_FILE.exists():
         bad(t("doc_no_env"))
         return 1
+
+    # Broken .env lines are silent killers: a line without "=" is ignored, and
+    # two settings glued into one line (a missing newline before `echo >>`)
+    # make the second one vanish - e.g. LANGUAGE falls back to English.
+    for number, problem, key in config.env_file_problems():
+        bad(t("doc_env_bad_line", n=number) if problem == "no_equals" else t("doc_env_glued", n=number, key=key))
+
+    lang = config.language()
+    ok(t("doc_settings", lang=lang, label=config.site_label(),
+         folders=", ".join(FOLDER_NAMES[lang].values())))
 
     url = config.moodle_base_url()
     if not url:

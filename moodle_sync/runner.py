@@ -53,6 +53,7 @@ STEPS = [
 
 # Recognisable causes -> what to do (notification text)
 KNOWN_PROBLEMS = [
+    ("--reorganize", "hint_mass_move"),
     ("invalidtoken", "hint_moodle_token"),
     ("MOODLE_TOKEN is not set", "hint_moodle_token"),
     ("invalid_grant", "hint_google_token"),

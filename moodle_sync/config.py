@@ -9,6 +9,7 @@ MOODLE_TOKEN - see .env.example and docs/*/configuration.md.
 
 import json
 import os
+import re
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -142,7 +143,30 @@ def load_courses_config() -> dict:
     return data
 
 
-# --- writing .env -----------------------------------------------------------------
+# --- checking and writing .env ---------------------------------------------------------
+
+def env_file_problems() -> list[tuple[int, str, str]]:
+    """
+    Lines of .env that silently don't work: [(line number, problem, key)].
+    'no_equals' - neither a comment nor KEY=value, ignored by the parser;
+    'glued'     - a value containing another KEY=..., i.e. two settings in one
+                  line (appending with `echo >>` to a file without a final
+                  newline does this, and the second setting silently vanishes).
+    """
+    problems = []
+    if not ENV_FILE.exists():
+        return problems
+    for number, line in enumerate(ENV_FILE.read_text(encoding="utf-8").splitlines(), 1):
+        text = line.strip()
+        if not text or text.startswith("#"):
+            continue
+        key, sep, value = text.partition("=")
+        if not sep:
+            problems.append((number, "no_equals", ""))
+        elif re.search(r"[A-Z][A-Z0-9_]{2,}=", value):
+            problems.append((number, "glued", key.strip()))
+    return problems
+
 
 def set_env_var(key: str, value: str) -> None:
     """
@@ -159,5 +183,6 @@ def set_env_var(key: str, value: str) -> None:
             break
     else:
         lines.append(new_line)
-    ENV_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # newline="\n": the same LF file on Windows and Linux (it's often copied to a Raspberry Pi)
+    ENV_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     os.environ[key] = value

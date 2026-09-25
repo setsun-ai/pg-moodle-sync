@@ -41,6 +41,12 @@ The project or `DOWNLOAD_DIR` is in Documents, Desktop or Downloads. See [Runnin
 **Raspberry Pi keeps losing Wi-Fi**
 Turn off Wi-Fi power saving, see [Raspberry Pi → Robustness](raspberry-pi.md#robustness).
 
+**"WARNING: the current settings would move N already downloaded files"**
+This is a safety fuse. A settings change would re-sort a large part of your archive, so nothing was moved or downloaded.
+- Usually it's an accident. The classic one: a line added with `echo "LANGUAGE=pl" >> .env` got glued to the previous line, because the file didn't end with a newline. `LANGUAGE` silently fell back to English, and every folder would be renamed.
+- Run `python -m moodle_sync doctor`. It points to broken `.env` lines. Fix them with `python -m moodle_sync set KEY VALUE`.
+- If you really changed the layout on purpose (new language, new `courses.json` rules), confirm it once with `python -m moodle_sync download --reorganize`. The next `upload` then moves the files in the cloud, without uploading them again.
+
 **The first announcement check sends nothing**
 That's by design. The first check only remembers existing posts, and so does any forum that starts being watched later. Only newer posts are notified.
 

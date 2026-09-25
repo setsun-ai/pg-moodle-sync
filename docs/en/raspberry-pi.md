@@ -108,6 +108,8 @@ With Telegram you rarely need SSH: `/status` shows the last run, free disk space
 | Free space | `df -h /` |
 | Change interval | edit `OnUnitInactiveSec=` in `deploy/linux/moodle-sync.timer`, then re-run `install-server.sh` |
 
+**Changing a setting:** `.venv/bin/python -m moodle_sync set LANGUAGE pl`, then `sudo systemctl restart moodle-sync-bot`. Don't append to `.env` with `echo >>`: if the file doesn't end with a newline, the new line gets glued to the last one.
+
 **Updating moodle-sync:**
 
 ```bash

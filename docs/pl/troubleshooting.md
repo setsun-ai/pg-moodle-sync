@@ -41,6 +41,12 @@ Projekt albo `DOWNLOAD_DIR` leży w Dokumentach, na Biurku albo w Pobranych. Zob
 **Raspberry Pi gubi Wi-Fi**
 Wyłącz oszczędzanie energii Wi-Fi, zobacz [Raspberry Pi → Odporność](raspberry-pi.md#odporność).
 
+**„UWAGA: obecne ustawienia przeniosłyby N już pobranych plików”**
+To bezpiecznik. Zmiana ustawień przemeblowałaby dużą część archiwum, więc niczego nie przeniesiono ani nie pobrano.
+- Zwykle to wypadek. Klasyczny przykład: linia dopisana przez `echo "LANGUAGE=pl" >> .env` skleiła się z poprzednią, bo plik nie kończył się znakiem nowej linii. `LANGUAGE` po cichu wróciło do angielskiego, więc wszystkie foldery zmieniłyby nazwy.
+- Uruchom `python -m moodle_sync doctor`. Wskaże zepsute linie `.env`. Popraw je poleceniem `python -m moodle_sync set KLUCZ WARTOŚĆ`.
+- Jeśli naprawdę zmieniasz układ celowo (nowy język, nowe reguły w `courses.json`), zatwierdź to raz: `python -m moodle_sync download --reorganize`. Kolejne `upload` przeniesie wtedy pliki w chmurze bez ponownego wysyłania.
+
 **Pierwsze sprawdzenie ogłoszeń nic nie wysłało**
 Tak ma być. Pierwsze sprawdzenie tylko zapamiętuje istniejące wpisy, podobnie jak każde forum, które zacznie być obserwowane później. Powiadomienia przychodzą tylko o nowszych wpisach.
 

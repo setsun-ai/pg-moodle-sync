@@ -219,17 +219,35 @@ def _remove_empty_dirs(root: Path) -> None:
             pass
 
 
-def relocate(files: list, plan: dict, downloaded: dict, state: dict, dry_run: bool) -> int:
-    """
-    Move downloaded files whose planned path changed. Two phases (everything
-    to temporary names first, then to the targets), so swapping two files'
-    places can't overwrite anything.
-    """
-    moves = {}  # old path -> new path
+def planned_moves(files: list, plan: dict, downloaded: dict) -> dict:
+    """Downloaded files whose planned path differs from where they are: {old path: new path}."""
+    moves = {}
     for f in files:
         entry = downloaded.get(f["id"])
         if entry and entry.get("path") and entry["path"] != plan[f["id"]].as_posix():
             moves[entry["path"]] = plan[f["id"]].as_posix()
+    return moves
+
+
+# Safety fuse: a handful of moves is a normal re-categorisation; moving a large
+# part of the archive at once almost always means a configuration accident
+# (e.g. LANGUAGE lost in a broken .env line -> every folder renamed to English).
+# Then nothing is moved until the user confirms with --reorganize.
+MASS_MOVE_MIN = 20
+MASS_MOVE_SHARE = 0.10
+
+
+def is_mass_move(n_moves: int, downloaded: dict) -> bool:
+    tracked = sum(1 for e in downloaded.values() if e.get("path"))
+    return n_moves > max(MASS_MOVE_MIN, int(tracked * MASS_MOVE_SHARE))
+
+
+def relocate(moves: dict, downloaded: dict, state: dict, dry_run: bool) -> int:
+    """
+    Move downloaded files to their new planned paths. Two phases (everything
+    to temporary names first, then to the targets), so swapping two files'
+    places can't overwrite anything.
+    """
     if not moves:
         return 0
 
@@ -320,7 +338,7 @@ def is_pending(f: dict, downloaded: dict) -> bool:
     return entry.get("skipped") == "too_large" and not too_large(f)
 
 
-def run(dry_run: bool = False, limit: int = 0, baseline: bool = False) -> int:
+def run(dry_run: bool = False, limit: int = 0, baseline: bool = False, reorganize: bool = False) -> int:
     files = collect_files(moodle.my_courses())
     cfg = config.load_courses_config()
 
@@ -328,7 +346,16 @@ def run(dry_run: bool = False, limit: int = 0, baseline: bool = False) -> int:
     downloaded = state.setdefault("downloaded", {})
 
     plan = plan_paths(files, downloaded, cfg)
-    relocate(files, plan, downloaded, state, dry_run)
+    moves = planned_moves(files, plan, downloaded)
+    if is_mass_move(len(moves), downloaded) and not reorganize:
+        print(t("files_mass_move", n=len(moves)))
+        for old, new in list(moves.items())[:5]:
+            print(f"    {old}\n -> {new}")
+        if dry_run:
+            print("\n" + t("dry_run_note"))
+            return 0
+        return 1  # nothing downloaded either - new files would land in the new layout
+    relocate(moves, downloaded, state, dry_run)
 
     pending = sorted((f for f in files if is_pending(f, downloaded)), key=lambda f: plan[f["id"]].as_posix())
 

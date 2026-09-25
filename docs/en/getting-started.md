@@ -87,3 +87,4 @@ Each line shows one check:
 | `ics` | Print your calendar subscription URL (Outlook / Apple Calendar). |
 | `bot [--setup]` | Run the Telegram bot / connect it to your chat. |
 | `notify-test` | Send a test notification to every configured channel. |
+| `set KEY VALUE` | Change one setting in `.env` safely, e.g. `set LANGUAGE pl`. Use this instead of `echo ... >> .env`. |

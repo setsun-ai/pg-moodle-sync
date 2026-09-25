@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 (2026-09)
+
+- **Safety fuse:** if a settings change would move a large part of the already downloaded archive, nothing is moved or downloaded until you confirm with `download --reorganize`. The error notification explains why. Found in real use: `LANGUAGE` was lost in a glued `.env` line, and every folder started to be renamed to English.
+- `doctor` shows the effective language and folder names, and detects broken `.env` lines (glued or without `=`).
+- New `set KEY VALUE` command to change `.env` safely. `.env` is always written with LF line endings.
+- Cloud moves save their progress every 20 files, so an interrupted run doesn't start over.
+
 ## 1.0.0 (2026-09)
 
 First public release: a universal tool for any Moodle.
