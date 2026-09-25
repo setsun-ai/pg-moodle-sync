@@ -21,6 +21,8 @@ This takes about **10 minutes**. You need a computer (Windows, macOS or Linux) a
 
 ## 3. Install and run the setup wizard
 
+> Before you start, read **[Responsible use](responsible-use.md)**. It's short, and it's about course materials, other people's data and your university's rules.
+
 | System | How |
 |---|---|
 | **Windows** | Double-click **`install.bat`** |

@@ -51,6 +51,8 @@ moodle-sync używa oficjalnego API aplikacji mobilnej na **Twoim własnym** konc
 - Regulaminy IT uczelni zwykle zakazują udostępniania danych logowania i przeciążania serwerów. Prywatna automatyzacja własnego konta jest z reguły w porządku, ale w razie wątpliwości sprawdź regulamin albo zapytaj dział IT (na PG: CUI).
 - Materiały z kursów są objęte prawem autorskim prowadzących. Trzymanie ich w **swojej prywatnej** chmurze to użytek osobisty. **Nie udostępniaj folderu publicznie ani linków do niego.**
 
+Szczegóły w **[Zasadach korzystania](responsible-use.md)** i **[Prywatności](../../PRIVACY.md#po-polsku)**.
+
 **Gdzie są moje dane?**
 Tylko na Twoim komputerze i w chmurze, którą **Ty** wybrałeś. Ten projekt nie ma żadnych serwerów. Powiadomienia idą przez wybrany przez Ciebie serwis (np. Telegram).
 

@@ -9,6 +9,10 @@
 **Never miss course materials, deadlines or announcements from Moodle again.**
 moodle-sync downloads your course files into tidy folders in the cloud, puts deadlines into your calendar and notifies you on your phone about what's new. It works with any Moodle, on Windows, macOS, Linux or a Raspberry Pi.
 
+> ⚖️ **For personal use only.** Course materials are copyrighted by their authors, and announcements can contain other
+> students' data. Keep everything **private** and follow your university's rules. Please read
+> **[Responsible use](docs/en/responsible-use.md)** and **[Privacy](PRIVACY.md)** before you start.
+
 ```
 📚 New course materials (3)
 • Algorithms: Lecture 5 - graphs.pdf
@@ -64,13 +68,15 @@ Full walk-through: **[Getting started](docs/en/getting-started.md)**.
 | [Configuration](docs/en/configuration.md) | Every option, `courses.json`, categories |
 | [Troubleshooting & FAQ](docs/en/troubleshooting.md) | Errors and questions |
 | [How it works](docs/en/how-it-works.md) | Architecture and design decisions, for learning |
+| [Responsible use](docs/en/responsible-use.md) · [Privacy](PRIVACY.md) · [Security](SECURITY.md) | Copyright, university rules, what data goes where |
 
 ## Is this allowed? Is it safe?
 
-- moodle-sync uses the **official Moodle mobile app API** with **your own** account, the same way the Moodle app on your phone does. It only **reads** your data, and it does so politely: a few dozen requests per run, with a user agent that names the project.
-- Your **token is a password-equivalent**. It stays in `.env` on your machine and is never logged or uploaded. See [SECURITY.md](SECURITY.md).
-- Course materials belong to their authors. Keep them in **your private** storage and **don't share the folder publicly**.
-- Check your university's IT rules if in doubt. Personal automation of your own account is generally fine; overloading servers or sharing logins is not.
+- **Allowed use:** moodle-sync uses the **official Moodle mobile app API** with **your own** account, the same way the Moodle app on your phone does. It only **reads** your data, and it does so politely: a few dozen requests per run, with a user agent that names the project.
+- **Materials stay private:** course materials belong to their authors. Keep them in **your private** storage and **never share the folder or links publicly**. Don't forward announcements with other people's data either. → **[Responsible use](docs/en/responsible-use.md)**
+- **Your data:** it stays on your computer and in the services **you** choose. There are no project servers and no telemetry. → **[Privacy](PRIVACY.md)**
+- **Your token is a password-equivalent:** it stays in `.env`, and is never logged or uploaded. → **[Security](SECURITY.md)**
+- **Not affiliated** with Moodle or any university; no warranty. Always double-check important deadlines in Moodle itself.
 
 ## Contributing
 

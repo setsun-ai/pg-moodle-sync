@@ -9,6 +9,10 @@
 **Nie przegap już żadnego materiału, terminu ani ogłoszenia z Moodle.**
 moodle-sync pobiera pliki z Twoich kursów do uporządkowanych folderów w chmurze, wpisuje terminy do kalendarza i powiadamia Cię na telefonie o nowościach. Działa z każdym Moodle (np. eNauczanie PG), na Windows, macOS, Linuksie i Raspberry Pi.
 
+> ⚖️ **Tylko do użytku osobistego.** Materiały z kursów są objęte prawem autorskim prowadzących, a ogłoszenia mogą zawierać
+> dane innych studentów. Trzymaj wszystko **prywatnie** i przestrzegaj regulaminów uczelni. Zanim zaczniesz, przeczytaj
+> **[Zasady korzystania](docs/pl/responsible-use.md)** i **[Prywatność](PRIVACY.md#po-polsku)**.
+
 ```
 📚 Nowe materiały (3)
 • Algorytmy: Wykład 5 - grafy.pdf
@@ -64,13 +68,15 @@ Pełna instrukcja: **[Pierwsze kroki](docs/pl/getting-started.md)**.
 | [Konfiguracja](docs/pl/configuration.md) | Wszystkie opcje, `courses.json`, kategorie |
 | [Problemy i FAQ](docs/pl/troubleshooting.md) | Błędy i pytania |
 | [Jak to działa](docs/pl/how-it-works.md) | Architektura i decyzje projektowe, do nauki |
+| [Zasady korzystania](docs/pl/responsible-use.md) · [Prywatność](PRIVACY.md#po-polsku) · [Bezpieczeństwo](SECURITY.md#po-polsku) | Prawa autorskie, regulaminy uczelni, dokąd trafiają dane |
 
 ## Czy tak wolno? Czy to bezpieczne?
 
-- moodle-sync korzysta z **oficjalnego API aplikacji mobilnej Moodle** na **Twoim własnym** koncie, tak samo jak aplikacja Moodle na telefonie. Tylko **czyta** Twoje dane i robi to kulturalnie: kilkadziesiąt zapytań na przebieg, z identyfikatorem, który podaje nazwę projektu.
-- **Token to odpowiednik hasła.** Zostaje w `.env` na Twoim komputerze i nigdy nie trafia do logów ani do sieci. Zobacz [SECURITY.md](SECURITY.md).
-- Materiały z kursów należą do autorów. Trzymaj je w **swojej prywatnej** chmurze i **nie udostępniaj folderu publicznie**.
-- W razie wątpliwości sprawdź regulamin IT uczelni. Prywatna automatyzacja własnego konta jest zwykle w porządku; przeciążanie serwerów i udostępnianie danych logowania już nie.
+- **Dozwolony sposób:** moodle-sync korzysta z **oficjalnego API aplikacji mobilnej Moodle** na **Twoim własnym** koncie, tak samo jak aplikacja Moodle na telefonie. Tylko **czyta** Twoje dane i robi to kulturalnie: kilkadziesiąt zapytań na przebieg, z identyfikatorem, który podaje nazwę projektu.
+- **Materiały zostają prywatne:** należą do autorów. Trzymaj je w **swojej prywatnej** chmurze i **nigdy nie udostępniaj folderu ani linków publicznie**. Nie przesyłaj też dalej ogłoszeń z cudzymi danymi. → **[Zasady korzystania](docs/pl/responsible-use.md)**
+- **Twoje dane:** zostają na Twoim komputerze i w usługach, które **Ty** wybierzesz. Projekt nie ma serwerów ani telemetrii. → **[Prywatność](PRIVACY.md#po-polsku)**
+- **Token to odpowiednik hasła:** zostaje w `.env` i nigdy nie trafia do logów ani do sieci. → **[Bezpieczeństwo](SECURITY.md#po-polsku)**
+- **Brak powiązań** z Moodle ani żadną uczelnią i brak gwarancji. Ważne terminy zawsze sprawdzaj też w samym Moodle.
 
 ## Współtworzenie
 

@@ -51,6 +51,8 @@ moodle-sync uses the official mobile app API with **your own** account and only 
 - Your university's IT rules usually forbid sharing your login or overloading servers. Personal automation is generally fine, but if in doubt, check the rules or ask your IT department.
 - Course materials are copyrighted by their authors. Keeping them in **your private** cloud is personal use. **Don't make the folder public or share the links.**
 
+The details are in **[Responsible use](responsible-use.md)** and **[Privacy](../../PRIVACY.md)**.
+
 **Where is my data?**
 Only on your computer and in the cloud **you** chose. No servers of this project exist. Notifications go through the service you picked (e.g. Telegram).
 

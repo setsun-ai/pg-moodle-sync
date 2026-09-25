@@ -196,6 +196,24 @@ MESSAGES: dict[str, dict[str, str]] = {
     # --- setup wizard ---
     "wiz_cancelled": {"pl": "Przerwano. Kreator możesz uruchomić ponownie w każdej chwili.",
                       "en": "Cancelled. You can run the wizard again any time."},
+    "wiz_rules_header": {"pl": "Zanim zaczniesz - zasady", "en": "Before you start - the rules"},
+    "wiz_rules_text": {"pl": "moodle-sync jest do użytku OSOBISTEGO, na Twoim własnym koncie:\n"
+                             "  • materiały z kursów należą do prowadzących - trzymaj je prywatnie, nie udostępniaj\n"
+                             "    folderu ani linków publicznie i nie wrzucaj ich na grupy roku,\n"
+                             "  • ogłoszenia mogą zawierać dane innych studentów - nie przesyłaj ich dalej,\n"
+                             "  • token to hasło - nie dawaj go nikomu i nie uruchamiaj programu dla innych,\n"
+                             "  • przestrzegaj regulaminów swojej uczelni.\n"
+                             "Dane zostają na Twoim komputerze i w usługach, które sam wybierzesz (projekt nie ma serwerów).\n"
+                             "Więcej: docs/pl/responsible-use.md oraz PRIVACY.md",
+                       "en": "moodle-sync is for PERSONAL use, on your own account:\n"
+                             "  • course materials belong to the teachers - keep them private, never share the folder\n"
+                             "    or links publicly, don't post them to group chats,\n"
+                             "  • announcements may contain other students' data - don't forward them,\n"
+                             "  • the token is a password - never give it to anyone or run the tool for others,\n"
+                             "  • follow your university's rules.\n"
+                             "Your data stays on your computer and in services you choose (the project has no servers).\n"
+                             "More: docs/en/responsible-use.md and PRIVACY.md"},
+    "wiz_rules_continue": {"pl": "Enter = rozumiem, dalej (Ctrl+C = przerwij) ", "en": "Enter = I understand, continue (Ctrl+C = cancel) "},
     "wiz_site_header": {"pl": "1/6  Adres Twojego Moodle", "en": "1/6  Your Moodle address"},
     "wiz_site_help": {"pl": "Wklej adres strony Moodle Twojej uczelni - może być dowolna jej podstrona,\n"
                             "np. https://enauczanie.pg.edu.pl/2025/my/",
@@ -255,8 +273,10 @@ MESSAGES: dict[str, dict[str, str]] = {
                               "reach the cloud with no extra setup."},
     "wiz_folder_prompt": {"pl": "Folder na materiały", "en": "Folder for materials"},
     "wiz_notify_header": {"pl": "4/6  Powiadomienia (opcjonalne)", "en": "4/6  Notifications (optional)"},
-    "wiz_notify_help": {"pl": "Możesz wybrać kilka. Telegram jako jedyny obsługuje też komendy (/terminy, /sync...).",
-                        "en": "You can pick several. Only Telegram also supports commands (/deadlines, /sync...)."},
+    "wiz_notify_help": {"pl": "Możesz wybrać kilka. Telegram jako jedyny obsługuje też komendy (/terminy, /sync...).\n"
+                              "Kanał ma być PRYWATNY (Twój czat / Twój serwer) - powiadomienia zawierają treść ogłoszeń i Twoje oceny.",
+                        "en": "You can pick several. Only Telegram also supports commands (/deadlines, /sync...).\n"
+                              "Keep the channel PRIVATE (your own chat / server) - notifications contain announcements and your grades."},
     "wiz_notify_current": {"pl": "Obecnie skonfigurowane: {channels}", "en": "Currently configured: {channels}"},
     "wiz_keep_existing": {"pl": "Zostawić obecne ustawienia?", "en": "Keep the current settings?"},
     "wiz_telegram_q": {"pl": "Telegram?", "en": "Telegram?"},

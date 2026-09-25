@@ -21,6 +21,8 @@ Zajmie Ci to około **10 minut**. Potrzebujesz komputera (Windows, macOS albo Li
 
 ## 3. Instalacja i kreator
 
+> Zanim zaczniesz, przeczytaj **[Zasady korzystania](responsible-use.md)**. To krótki tekst o materiałach z kursów, cudzych danych i regulaminach uczelni.
+
 | System | Jak |
 |---|---|
 | **Windows** | Kliknij dwukrotnie **`install.bat`** |
