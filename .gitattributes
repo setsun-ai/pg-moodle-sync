@@ -1,2 +1,6 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# The tool runs on Linux too (Raspberry Pi): LF everywhere, also when checked
+# out on Windows - a bash script with CRLF fails with "$'\r': command not found".
+* text=auto eol=lf
+# ...except Windows scripts: cmd.exe mis-handles "goto" labels in LF-only .bat files.
+*.bat text eol=crlf
+*.ps1 text eol=crlf

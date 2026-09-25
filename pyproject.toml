@@ -1,0 +1,45 @@
+[project]
+name = "moodle-sync"
+version = "1.0.0"
+description = "Moodle -> cloud storage (Google Drive, OneDrive...), Google Calendar and notifications (Telegram, Discord, ntfy, e-mail)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = ["requests>=2.28", "python-dotenv>=1.0", "google-auth>=2.20", "google-auth-oauthlib>=1.0"]
+keywords = ["moodle", "students", "google-drive", "google-calendar", "telegram", "raspberry-pi"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Education",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+moodle-sync = "moodle_sync.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/setsun-ai/pg-moodle-sync"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["moodle_sync"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]  # long user-facing strings are fine
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

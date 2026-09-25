@@ -1,0 +1,18 @@
+{
+  "_comment": "Copy to courses.json (optional). Keys = a FRAGMENT of the course name in Moodle (case-insensitive). Preview the result: python -m moodle_sync courses. Changes move already downloaded files automatically.",
+  "names": {
+    "Introduction to Programming 2025/2026 (group 3, Prof. Smith)": "Programming",
+    "Foreign language course": "English"
+  },
+  "default_category": {
+    "Foreign language course": "exercises"
+  },
+  "skip": [
+    "Library training",
+    "Sandbox"
+  ],
+  "category_rules": [
+    { "folder": "Seminars", "pattern": "seminar" },
+    { "folder": "Exams", "pattern": "egzamin|exam|kolokw" }
+  ]
+}

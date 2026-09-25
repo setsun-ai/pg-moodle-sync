@@ -1,0 +1,6 @@
+# Runtime dependencies (pip install -r requirements.txt)
+requests>=2.28
+python-dotenv>=1.0
+# Google Calendar (optional feature, but small - installed for everyone)
+google-auth>=2.20
+google-auth-oauthlib>=1.0

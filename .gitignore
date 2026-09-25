@@ -1,0 +1,28 @@
+# --- secrets: NEVER commit ---
+.env
+client_secret*.json
+google_token.json
+
+# --- personal data ---
+state.json
+state.json.*
+courses.json
+przedmioty.json
+downloads/
+logs/
+
+# --- runtime ---
+*.part
+*.relocating
+.moodle_sync.lock
+.run_all.lock
+
+# --- Python ---
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/

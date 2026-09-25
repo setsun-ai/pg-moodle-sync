@@ -1,0 +1,112 @@
+"""
+Command line: python -m moodle_sync <command>
+
+    setup       interactive setup wizard (start here)
+    doctor      check the configuration and say what to fix
+    run         one full sync: files -> cloud -> calendar -> announcements/grades
+    token       get a new Moodle token (when the old one expired)
+    download    only download new files         [--dry-run] [--limit N] [--baseline]
+    upload      only upload to the cloud        [--dry-run] [--check]
+    calendar    only sync the calendar          [--dry-run] [--auth]
+    watch       only check announcements/grades [--dry-run] [--force]
+    courses     preview how files are categorised (for editing courses.json)
+    ics         print the calendar subscription URL (Outlook / Apple Calendar)
+    bot         run the Telegram bot            [--setup]
+    notify-test send a test notification to all configured channels
+"""
+
+import argparse
+import sys
+
+from . import __version__
+
+
+def main(argv: list[str] | None = None) -> int:
+    # Windows consoles may default to a legacy code page - make Polish letters and emoji safe.
+    for stream in (sys.stdout, sys.stderr):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+    parser = argparse.ArgumentParser(prog="python -m moodle_sync",
+                                     description="Moodle -> cloud storage, calendar and notifications.")
+    parser.add_argument("--version", action="version", version=f"moodle-sync {__version__}")
+    sub = parser.add_subparsers(dest="command", metavar="<command>")
+
+    sub.add_parser("setup", help="interactive setup wizard (start here)")
+    sub.add_parser("doctor", help="check the configuration")
+    p = sub.add_parser("run", help="one full sync (what the scheduler runs)")
+    p.add_argument("--log-file", help="append output to this file (used by scheduled runs)")
+    sub.add_parser("token", help="get a new Moodle token")
+    p = sub.add_parser("download", help="only download new files")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--baseline", action="store_true", help="mark current files as done without downloading")
+    p = sub.add_parser("upload", help="only upload to the cloud")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--check", action="store_true", help="only test the rclone remote")
+    p = sub.add_parser("calendar", help="only sync the calendar")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--auth", action="store_true", help="log in to Google (one time)")
+    p = sub.add_parser("watch", help="only check announcements and grades")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--force", action="store_true")
+    sub.add_parser("courses", help="preview categories per course")
+    sub.add_parser("ics", help="print the calendar subscription URL")
+    p = sub.add_parser("bot", help="run the Telegram bot")
+    p.add_argument("--setup", action="store_true", help="connect the bot to your chat")
+    sub.add_parser("notify-test", help="send a test notification")
+
+    args = parser.parse_args(argv)
+    cmd = args.command
+    if cmd is None:
+        parser.print_help()
+        return 0
+
+    # Imports per command: `bot` and `run` shouldn't load what they don't need.
+    if cmd == "setup":
+        from .setup_wizard import run
+        return run()
+    if cmd == "token":
+        from .setup_wizard import run_token_only
+        return run_token_only()
+    if cmd == "doctor":
+        from .doctor import run
+        return run()
+    if cmd == "run":
+        from .runner import run
+        return run(log_file=args.log_file)
+    if cmd == "download":
+        from .files import run
+        return run(dry_run=args.dry_run, limit=args.limit, baseline=args.baseline)
+    if cmd == "upload":
+        from . import storage
+        return storage.check() if args.check else storage.run(dry_run=args.dry_run)
+    if cmd == "calendar":
+        from . import calendar_sync
+        return calendar_sync.authorize() if args.auth else calendar_sync.run(dry_run=args.dry_run)
+    if cmd == "watch":
+        from .watch import run
+        return run(force=args.force, dry_run=args.dry_run)
+    if cmd == "courses":
+        from .files import preview
+        return preview()
+    if cmd == "ics":
+        from .calendar_sync import ics_url
+        return ics_url()
+    if cmd == "bot":
+        from . import telegram_bot
+        return telegram_bot.setup() if args.setup else telegram_bot.run()
+    if cmd == "notify-test":
+        from .i18n import t
+        from .notify import channels, notify
+        if not channels():
+            print(t("doc_notify", channels=t("doc_none")))
+            return 2
+        notify("test", t("wiz_test_title"), t("wiz_test_body"))
+        print(t("wiz_test_sent", channels=", ".join(channels())))
+        return 0
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
