@@ -1,0 +1,13 @@
+# How often to run. After a change: bash deploy/linux/install-server.sh
+[Unit]
+Description=moodle-sync schedule
+
+[Timer]
+# 3 min after boot (Wi-Fi and clock are ready), then 15 min after the previous
+# run FINISHED - runs never overlap.
+OnBootSec=3min
+OnUnitInactiveSec=15min
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

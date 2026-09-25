@@ -1,0 +1,17 @@
+# One sync run, started by moodle-sync.timer. @USER@/@DIR@ are filled in by install-server.sh.
+[Unit]
+Description=moodle-sync (one run)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=@USER@
+WorkingDirectory=@DIR@
+ExecStart=@DIR@/.venv/bin/python -m moodle_sync run
+Environment=PYTHONUNBUFFERED=1 PYTHONIOENCODING=utf-8
+# The first sync (hundreds of MB over Wi-Fi) can take a while.
+TimeoutStartSec=3h
+# Low priority - the machine stays responsive (SSH etc.).
+Nice=10
+IOSchedulingClass=idle
