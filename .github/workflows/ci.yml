@@ -1,0 +1,47 @@
+# Runs on every push and pull request: lint + tests on Windows, macOS and Linux.
+# No secrets are used - the tests never talk to a real Moodle or send notifications.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m ruff check .
+      - run: python -m pytest -q
+      - name: CLI starts
+        run: python -m moodle_sync --help
+
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell scripts parse and pass shellcheck (errors only)
+        run: |
+          for f in install.sh sync.sh deploy/linux/*.sh deploy/macos/*.sh; do
+            bash -n "$f"
+            shellcheck -S error "$f"
+          done
+      - name: Windows scripts keep CRLF line endings
+        run: |
+          for f in *.bat deploy/windows/*; do
+            grep -q $'\r' "$f" || { echo "$f has LF line endings"; exit 1; }
+          done

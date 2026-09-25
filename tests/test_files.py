@@ -1,0 +1,101 @@
+import json
+import os
+from pathlib import Path
+
+from conftest import make_file
+
+from moodle_sync import config, files, state
+
+
+class TestCategorize:
+    def test_section_name_wins(self):
+        f = make_file(section_name="Lab sessions", module_name="Lecture slides")
+        assert files.categorize(f, {}) == "Labs"
+
+    def test_falls_back_to_module_then_file_name(self):
+        assert files.categorize(make_file(module_name="Project brief"), {}) == "Projects"
+        assert files.categorize(make_file(module_name="Stuff", filename="lecture3.pdf"), {}) == "Lectures"
+
+    def test_polish_keywords_and_folder_names(self, monkeypatch):
+        monkeypatch.setenv("LANGUAGE", "pl")
+        f = make_file(section_name="WYKŁADY I MATERIAŁY", module_name="x")
+        assert files.categorize(f, {}) == "Wyklady"
+        assert files.categorize(make_file(section_name="Ćwiczenia audytoryjne"), {}) == "Cwiczenia"
+
+    def test_syllabus_is_not_a_lab(self):
+        assert files.categorize(make_file(module_name="Syllabus", filename="syllabus.pdf"), {}) == "Other materials"
+
+    def test_default_category_from_courses_json(self):
+        cfg = {"default_category": {"algo": "exercises"}}
+        assert files.categorize(make_file(module_name="Stuff"), cfg) == "Exercises"
+
+    def test_custom_rules_go_first(self):
+        cfg = {"category_rules": [{"folder": "Exams", "pattern": "egzamin|exam"}]}
+        f = make_file(section_name="Exam and lab info")
+        assert files.categorize(f, cfg) == "Exams"
+
+
+class TestPaths:
+    def test_folder_module_keeps_structure(self):
+        f = make_file(modname="folder", module_name="Materials", filepath="/Demos/", filename="w2.c",
+                      section_name="Lecture")
+        assert files.relative_path(f, {}) == Path("Algorithms", "Lectures", "Materials", "Demos", "w2.c")
+
+    def test_course_name_override(self):
+        cfg = {"names": {"algo": "Algo & DS"}}
+        assert files.relative_path(make_file(), cfg).parts[0] == "Algo & DS"
+
+    def test_collision_is_case_insensitive(self):
+        owners = {"a/x.pdf": "key1"}
+        assert files.resolve_collision(Path("a/X.pdf"), "key2", owners) == Path("a/X (2).pdf")
+        assert files.resolve_collision(Path("a/x.pdf"), "key1", owners) == Path("a/x.pdf")
+
+    def test_new_revision_keeps_the_same_path(self):
+        old = make_file(id="url:rev1")
+        new = make_file(id="url:rev2")  # same module/name -> same logical key
+        plan = files.plan_paths([old, new], downloaded={"url:rev1": {}}, cfg={})
+        assert plan["url:rev1"] == plan["url:rev2"]
+
+    def test_existing_file_keeps_its_name_when_new_one_clashes(self):
+        existing = make_file(id="url:b", module_id=200, module_name="Z")
+        newcomer = make_file(id="url:a", module_id=100, module_name="A")  # would sort first
+        plan = files.plan_paths([existing, newcomer], downloaded={"url:b": {}}, cfg={})
+        assert plan["url:b"].name == "a.pdf"
+        assert plan["url:a"].name == "a (2).pdf"
+
+
+def test_stable_id_prefers_contenthash_then_url():
+    assert files.stable_id({"contenthash": "abc", "fileurl": "u"}) == "hash:abc"
+    assert files.stable_id({"fileurl": "u"}) == "url:u"
+    assert files.stable_id({"filename": "f", "filesize": 1, "timemodified": 2}) == "meta:f:1:2"
+
+
+def test_relocate_moves_file_and_queues_cloud_move(isolated):
+    root = config.download_dir()
+    old = root / "Algorithms" / "Other materials" / "a.pdf"
+    old.parent.mkdir(parents=True)
+    old.write_text("x")
+    os.utime(old, (1_700_000_000, 1_700_000_000))
+    f = make_file(section_name="Lectures")
+    downloaded = {f["id"]: {"path": "Algorithms/Other materials/a.pdf", "key": files.logical_key(f)}}
+    st = {"downloaded": downloaded}
+
+    plan = files.plan_paths([f], downloaded, {})
+    assert files.relocate([f], plan, downloaded, st, dry_run=False) == 1
+
+    new = root / "Algorithms" / "Lectures" / "a.pdf"
+    assert new.read_text() == "x" and not old.exists()
+    assert int(new.stat().st_mtime) == 1_700_000_000  # mtime kept (rclone compares it)
+    assert not (root / "Algorithms" / "Other materials").exists()  # empty dir removed
+    saved = json.loads(config.STATE_FILE.read_text(encoding="utf-8"))
+    assert saved["remote_moves"] == [{"from": "Algorithms/Other materials/a.pdf", "to": "Algorithms/Lectures/a.pdf"}]
+    assert state.load()["downloaded"][f["id"]]["path"] == "Algorithms/Lectures/a.pdf"
+
+
+def test_too_large_is_retried_after_raising_the_limit(monkeypatch):
+    f = make_file(filesize=50 * 1024 * 1024)
+    downloaded = {f["id"]: {"skipped": "too_large"}}
+    monkeypatch.setenv("MAX_FILE_MB", "10")
+    assert files.too_large(f) and not files.is_pending(f, downloaded)
+    monkeypatch.setenv("MAX_FILE_MB", "100")
+    assert files.is_pending(f, downloaded)
