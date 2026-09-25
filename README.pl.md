@@ -1,6 +1,6 @@
 # moodle-sync
 
-[![CI](https://github.com/setsun-ai/pg-moodle-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/setsun-ai/pg-moodle-sync/actions/workflows/ci.yml)
+[![CI](https://github.com/setsun-ai/moodle-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/setsun-ai/moodle-sync/actions/workflows/ci.yml)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 [![Licencja: MIT](https://img.shields.io/badge/licencja-MIT-green)](LICENSE)
 

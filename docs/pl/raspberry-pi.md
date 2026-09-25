@@ -48,7 +48,7 @@ Masz dwie drogi.
 **A) Konfiguracja od zera na Pi:**
 
 ```bash
-git clone https://github.com/setsun-ai/pg-moodle-sync.git ~/moodle-sync
+git clone https://github.com/setsun-ai/moodle-sync.git ~/moodle-sync
 cd ~/moodle-sync
 bash install.sh              # tworzy .venv i uruchamia kreator
 ```
@@ -59,7 +59,7 @@ Przy logowaniu SSO krok z przeglądarką zrobisz na dowolnym komputerze: otwórz
 
 ```bash
 # na Pi:
-git clone https://github.com/setsun-ai/pg-moodle-sync.git ~/moodle-sync
+git clone https://github.com/setsun-ai/moodle-sync.git ~/moodle-sync
 # na komputerze (PowerShell na Windows albo terminal macOS/Linux), w folderze projektu:
 scp .env state.json google_token.json <użytkownik>@moodlesync.local:~/moodle-sync/
 scp courses.json przedmioty.json <użytkownik>@moodlesync.local:~/moodle-sync/   # te, które masz

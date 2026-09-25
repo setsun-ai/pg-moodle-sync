@@ -21,7 +21,7 @@ dev = ["pytest>=8", "ruff>=0.6"]
 moodle-sync = "moodle_sync.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/setsun-ai/pg-moodle-sync"
+Homepage = "https://github.com/setsun-ai/moodle-sync"
 
 [build-system]
 requires = ["setuptools>=68"]

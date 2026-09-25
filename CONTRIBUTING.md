@@ -7,8 +7,8 @@ Thanks for helping! This project is meant to be friendly to first-year students.
 ## Setup
 
 ```bash
-git clone https://github.com/setsun-ai/pg-moodle-sync.git
-cd pg-moodle-sync
+git clone https://github.com/setsun-ai/moodle-sync.git
+cd moodle-sync
 python -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt      # Windows: .venv\Scripts\pip ...
 .venv/bin/python -m pytest                          # all tests must pass

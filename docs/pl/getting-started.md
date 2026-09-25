@@ -15,7 +15,7 @@ Zajmie Ci to około **10 minut**. Potrzebujesz komputera (Windows, macOS albo Li
 ## 2. Pobierz moodle-sync
 
 - **Najprościej:** na stronie GitHuba kliknij **Code → Download ZIP** i rozpakuj, np. do `C:\moodle-sync` albo `~/moodle-sync`.
-- **Przez git:** `git clone https://github.com/setsun-ai/pg-moodle-sync.git moodle-sync`
+- **Przez git:** `git clone https://github.com/setsun-ai/moodle-sync.git moodle-sync`
 
 > **macOS:** nie wrzucaj projektu do *Dokumentów*, na *Biurko* ani do *Pobranych*. Zadania w tle nie mają tam dostępu bez dodatkowych uprawnień ([szczegóły](running.md#macos)).
 
