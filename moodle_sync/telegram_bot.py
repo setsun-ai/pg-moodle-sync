@@ -179,7 +179,7 @@ def run() -> int:
                     continue  # command older than 10 min (bot was off) - don't execute it now
                 print(f"> {msg['text'][:40]}", flush=True)
                 notify.send_telegram_html(handle(msg["text"], chat), chat)
-        except requests.RequestException as e:
+        except (requests.RequestException, ValueError) as e:  # ValueError: not JSON (e.g. a proxy error page)
             print(f"[telegram] {notify._redact(str(e))} - retry in 15 s", flush=True)
             time.sleep(15)
 

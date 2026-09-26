@@ -213,17 +213,29 @@ def google_session():
     return AuthorizedSession(creds)
 
 
-def ensure_calendars(session, cal_state: dict) -> dict:
+def ensure_calendars(session, cal_state: dict) -> tuple[dict, set]:
+    """
+    Our two calendars: (ids, keys of calendars created just now). A calendar is
+    (re)created only when Google says it's gone (404/410, e.g. deleted by hand) -
+    any other error (expired login, Google hiccup) is raised, never answered with
+    a duplicate "<SITE_LABEL> – deadlines" calendar.
+    """
     ids = cal_state.setdefault("calendars", {})
+    created = set()
     for key, name in calendar_names().items():
         cal_id = ids.get(key)
-        if cal_id and session.get(f"{API}/calendars/{cal_id}").status_code == 200:
-            continue
+        if cal_id:
+            resp = session.get(f"{API}/calendars/{cal_id}")
+            if resp.status_code == 200:
+                continue
+            if resp.status_code not in (404, 410):
+                resp.raise_for_status()
         resp = session.post(f"{API}/calendars", json={"summary": name, "timeZone": config.timezone_name()})
         resp.raise_for_status()
         ids[key] = resp.json()["id"]
+        created.add(key)
         print(t("cal_created", name=name))
-    return ids
+    return ids, created
 
 
 def upsert_event(session, cal_id: str, event_id: str, body: dict) -> None:
@@ -270,6 +282,16 @@ def run(dry_run: bool = False) -> int:
     cal_state = state.setdefault("calendar", {})
     known = cal_state.setdefault("events", {})  # moodle id -> {fp, cal, start, done, added}
 
+    session = cal_ids = None
+    if not dry_run:
+        # Checked every run (2 cheap requests): a calendar deleted by hand in Google
+        # is recreated and refilled right away, not only when something changes in Moodle.
+        session = google_session()
+        cal_ids, created = ensure_calendars(session, cal_state)
+        for entry in known.values():
+            if entry["cal"] in created:
+                entry["fp"] = ""  # upload again; same start -> no "new deadline" notification
+
     to_upsert, fetched_ids = [], set()
     for e in events:
         mid = str(e["id"])
@@ -303,9 +325,6 @@ def run(dry_run: bool = False) -> int:
     if not to_upsert and not to_delete:
         state_mod.save(state)
         return 0
-
-    session = google_session()
-    cal_ids = ensure_calendars(session, cal_state)
 
     failed, new_deadlines, moved_deadlines = 0, [], []
     for mid, cal, body, fp, prev, done in to_upsert:

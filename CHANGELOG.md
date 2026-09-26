@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 (2026-09)
+
+- **Calendar: no more duplicate calendars.** A temporary Google error (expired login, a 5xx) while checking the calendars was treated as "calendar deleted", and a second "<SITE_LABEL> – deadlines" calendar was created. Now a calendar is recreated only when Google really says it's gone (404/410).
+- **Calendar: a calendar deleted by hand is refilled completely** on the next run. Before, it came back only after the next change in Moodle, and only with the changed events. The refill doesn't send "new deadline" notifications.
+- **Telegram:** a long message cut inside an HTML tag or entity was rejected by Telegram and lost. Such a message is now delivered as plain text.
+- The Telegram bot survives a non-JSON answer (e.g. a proxy error page) instead of stopping.
+- Releases: pushing a version tag runs the tests and publishes a GitHub release with notes from this file.
+
 ## 1.0.1 (2026-09)
 
 - **Safety fuse:** if a settings change would move a large part of the already downloaded archive, nothing is moved or downloaded until you confirm with `download --reorganize`. The error notification explains why. Found in real use: `LANGUAGE` was lost in a glued `.env` line, and every folder started to be renamed to English.

@@ -14,6 +14,7 @@ Setup guide: docs/*/notifications.md
 """
 
 import html
+import re
 import smtplib
 import ssl
 from email.message import EmailMessage
@@ -73,6 +74,12 @@ def send_telegram_html(text: str, chat_id: str | None = None) -> bool:
         resp = requests.post(f"{telegram_api()}/sendMessage", timeout=15, json={
             "chat_id": chat_id, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True,
         })
+        if resp.status_code == 400 and "parse" in resp.text:
+            # HTML broken (e.g. cut inside a tag or &entity;): deliver it as plain text rather than not at all
+            plain = html.unescape(re.sub(r"<[^>]*>?", "", text))
+            resp = requests.post(f"{telegram_api()}/sendMessage", timeout=15, json={
+                "chat_id": chat_id, "text": plain, "disable_web_page_preview": True,
+            })
         if resp.status_code != 200:
             print(f"[telegram] HTTP {resp.status_code} {resp.text[:200]}")
             return False

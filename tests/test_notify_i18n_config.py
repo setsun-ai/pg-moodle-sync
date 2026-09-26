@@ -127,3 +127,21 @@ class TestRunner:
 ])
 def test_wizard_normalizes_urls(raw, expected):
     assert setup_wizard.normalize_url(raw) == expected
+
+
+def test_broken_telegram_html_falls_back_to_plain_text(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:abc")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+    sent = []
+
+    class Resp:
+        def __init__(self, status):
+            self.status_code, self.text = status, "Bad Request: can't parse entities" if status == 400 else ""
+
+    def post(url, json=None, **k):
+        sent.append(json)
+        return Resp(400 if json.get("parse_mode") else 200)
+
+    monkeypatch.setattr(notify.requests, "post", post)
+    assert notify.send_telegram_html("<b>Room &amp; time</b> changed &am")
+    assert sent[1] == {"chat_id": "42", "text": "Room & time changed &am", "disable_web_page_preview": True}
